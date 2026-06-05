@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Solar Pro: Dinámica Térmica y IONIS</title>
+    <style>
+        :root {
+            --solar-orange: #f39c12;
+            --tech-dark: #2c3e50;
+            --cold-blue: #3498db;
+            --hot-red: #e74c3c;
+            --ionis-green: #27ae60;
+            --sarro-color: #d1d1d1;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: #eaeff2; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        .main-card { max-width: 900px; width: 100%; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); box-sizing: border-box; }
+        
+        h1 { color: var(--tech-dark); text-align: center; font-size: 1.4rem; border-bottom: 3px solid var(--solar-orange); padding-bottom: 8px; margin: 0 0 15px 0; }
+
+        /* CONTROLES */
+        .controls-grid { background: var(--tech-dark); color: white; padding: 15px; border-radius: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .input-group { display: flex; flex-direction: column; }
+        label { font-size: 0.75rem; margin-bottom: 4px; color: #bdc3c7; }
+        input, select { padding: 8px; border-radius: 4px; border: none; font-size: 0.9rem; }
+        
+        .ionis-btn { grid-column: 1 / -1; background: #95a5a6; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .ionis-active { background: var(--ionis-green) !important; box-shadow: 0 0 12px var(--ionis-green); }
+
+        /* SVG */
+        .svg-container { width: 100%; height: auto; background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+        
+        /* Animaciones de Flujo */
+        .flow-line { fill: none; stroke-width: 4; stroke-dasharray: 8, 12; animation: dash 1s linear infinite; display: none; }
+        @keyframes dash { to { stroke-dashoffset: -20; } }
+        
+        /* Rayos Invernadero */
+        .ray { stroke: #f1c40f; stroke-width: 2; stroke-dasharray: 4,4; animation: rayFlow 2s linear infinite; visibility: hidden; }
+        @keyframes rayFlow { to { stroke-dashoffset: -40; } }
+
+        /* EXPLICACIONES TÉCNICAS */
+        .tech-info { margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
+        .info-box h4 { margin: 0 0 5px 0; font-size: 0.9rem; color: var(--tech-dark); border-left: 3px solid var(--solar-orange); padding-left: 8px; }
+        .info-box p { margin: 0; font-size: 0.85rem; line-height: 1.4; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="main-card">
+    <h1>Laboratorio Solar Pro: Termosifón y Protección de Tanque</h1>
+
+    <div class="controls-grid">
+        <div class="input-group">
+            <label>Temp. Agua de Red (°C):</label>
+            <input type="number" id="baseTemp" value="12" oninput="updateSim()">
+        </div>
+        <div class="input-group">
+            <label>Estación del Año:</label>
+            <select id="season" onchange="updateSim()">
+                <option value="summer">☀️ Verano (Alta Radiación)</option>
+                <option value="winter">❄️ Invierno (Baja Radiación)</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>Horas de Sol Acumuladas:0 A 10  </label>
+            <input type="range" id="sunHours" min="0" max="10" step="0.5" value="0" oninput="updateSim()">
+        </div>
+        <button class="ionis-btn" id="ionisToggle" onclick="toggleIonis()">ACTIVAR EQUIPO IONIS (ANTISARRO)</button>
+    </div>
+
+    <div class="svg-container">
+        <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+            <!-- CIELO Y SOL -->
+            <rect width="800" height="340" fill="#f0faff" />
+            <circle id="sun-viz" cx="120" cy="80" r="30" fill="#f1c40f">
+                <animate attributeName="opacity" values="0.7;1;0.7" dur="3s" repeatCount="indefinite" />
+            </circle>
+
+            <!-- RAYOS (Invernadero) -->
+            <line x1="140" y1="110" x2="200" y2="300" class="ray" id="r1" />
+            <line x1="170" y1="90" x2="240" y2="270" class="ray" id="r2" />
+
+            <!-- TANQUE ACUMULADOR (Estratificación Real) -->
+            <defs>
+                <linearGradient id="tankFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop id="grad-hot" offset="0%" stop-color="#3498db" /> <!-- Dinámico -->
+                    <stop id="grad-mid" offset="0%" stop-color="#e74c3c" /> <!-- Punto de bajada de calor -->
+                    <stop id="grad-cold" offset="100%" stop-color="#3498db" /> <!-- Fondo frío -->
+                </linearGradient>
+            </defs>
+            
+            <rect x="420" y="70" width="240" height="130" rx="35" fill="url(#tankFill)" stroke="#7f8c8d" stroke-width="4" />
+            <text x="495" y="145" fill="white" font-weight="bold" font-size="16">TANQUE 100L</text>
+            
+            <!-- Etiqueta de Temperatura Dinámica (ARRIBA DEL TANQUE) -->
+            <rect x="470" y="30" width="140" height="30" rx="5" fill="var(--tech-dark)" opacity="0.8" />
+            <text id="top-temp-label" x="480" y="50" fill="var(--solar-orange)" font-weight="bold" font-size="14">Temp: 12.0°C</text>
+
+            <!-- COSTRA DE SARRO -->
+            <path id="tank-crust" d="M 430 105 Q 430 85 465 85 L 615 85 Q 650 85 650 105 L 650 165 Q 650 185 615 185 L 465 185 Q 430 185 430 165 Z" 
+                  fill="none" stroke="var(--sarro-color)" stroke-width="8" stroke-opacity="0.6" style="opacity: 0;" />
+
+            <!-- COLECTOR Y TERMOSIFÓN -->
+            <g transform="rotate(25, 300, 400)">
+                <rect x="180" y="100" width="60" height="320" rx="30" fill="rgba(200,230,255,0.3)" stroke="#bdc3c7" />
+                <rect id="tube-water" x="195" y="110" width="30" height="300" rx="15" fill="#74b9ff" opacity="0.6" />
+                
+                <path d="M 210 400 L 210 120" id="flow-up" class="flow-line" stroke="var(--hot-red)" />
+                <path d="M 225 120 L 225 400" id="flow-down" class="flow-line" stroke="var(--cold-blue)" />
+                
+                <rect x="200" y="50" width="20" height="60" fill="#7f8c8d" /> 
+            </g>
+
+            <!-- ENTRADA CON IONIS -->
+            <path d="M 50 440 L 280 440 L 280 200 L 420 170" fill="none" stroke="#bdc3c7" stroke-width="8" />
+            <rect id="ionis-viz" x="255" y="340" width="50" height="60" rx="5" fill="#7f8c8d" />
+            <text x="245" y="420" font-size="10" font-weight="bold" fill="var(--tech-dark)">FILTRO IONIS</text>
+            
+            <text id="sarro-alert" x="425" y="225" font-size="11" font-weight="bold" fill="#c0392b" visibility="hidden">⚠️ COSTRA DE SARRO DETECTADA</text>
+        </svg>
+    </div>
+
+    <div class="tech-info">
+        <div class="info-box">
+            <h4>Física de Termosifón [1, 2]</h4>
+            <p>La radiación entra al tubo (Invernadero), calienta el agua y esta, por menor densidad, sube al tanque acumulándose **siempre arriba** (Estratificación).</p>
+        </div>
+        <div class="info-box">
+            <h4>Acción del IONIS [3, 4]</h4>
+            <p>El tratamiento magnético modifica físicamente los carbonatos para que **no se peguen**. Sin IONIS, el calor genera la costra aislante que ves en el tanque.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let ionisActive = false;
+
+    function toggleIonis() {
+        ionisActive = !ionisActive;
+        const btn = document.getElementById('ionisToggle');
+        const viz = document.getElementById('ionis-viz');
+        btn.classList.toggle('ionis-active', ionisActive);
+        btn.innerText = ionisActive ? "IONIS ACTIVADO: TANQUE PROTEGIDO" : "ACTIVAR EQUIPO IONIS (ANTISARRO)";
+        viz.style.fill = ionisActive ? "var(--ionis-green)" : "#7f8c8d";
+        updateSim();
+    }
+
+    function updateSim() {
+        const hours = parseFloat(document.getElementById('sunHours').value);
+        const base = parseFloat(document.getElementById('baseTemp').value) || 0;
+        const season = document.getElementById('season').value;
+        const sun = document.getElementById('sun-viz');
+        const crust = document.getElementById('tank-crust');
+        const alert = document.getElementById('sarro-alert');
+        const topLabel = document.getElementById('top-temp-label');
+        
+        // Tasa de ganancia térmica (Summer: 8°C/hr, Winter: 4°C/hr)
+        let rate = (season === 'summer') ? 8.2 : 4.1;
+        let final = Math.min(base + (hours * rate), 96);
+        
+        // Actualizar etiqueta superior DINÁMICA
+        topLabel.textContent = `Temp: ${final.toFixed(1)}°C`;
+
+        // Flujos y Rayos
+        const active = hours > 0;
+        document.getElementById('flow-up').style.display = active ? 'block' : 'none';
+        document.getElementById('flow-down').style.display = active ? 'block' : 'none';
+        document.getElementById('r1').style.visibility = active ? 'visible' : 'hidden';
+        document.getElementById('r2').style.visibility = active ? 'visible' : 'hidden';
+        document.getElementById('tube-water').setAttribute('fill', active ? '#e74c3c' : '#74b9ff');
+
+        // Sol Intensidad
+        let s = (season === 'summer' ? 1.4 : 0.8) + (hours * 0.08);
+        sun.setAttribute('transform', `translate(120, 80) scale(${s}) translate(-120, -80)`);
+
+        // ESTRATIFICACIÓN DINÁMICA: El calor (rojo) baja desde arriba
+        const hotPercent = Math.min(((final - base) / 60) * 100, 100);
+        document.getElementById('grad-mid').setAttribute('offset', hotPercent + "%");
+        document.getElementById('grad-hot').setAttribute('stop-color', active ? '#e74c3c' : '#3498db');
+
+        // COSTRA DE SARRO
+        if (!ionisActive && hours > 1.5) {
+            crust.style.opacity = (hours / 10).toString();
+            alert.style.visibility = 'visible';
+        } else {
+            crust.style.opacity = "0";
+            alert.style.visibility = 'hidden';
+        }
+    }
+    updateSim();
+</script>
+
+</body>
+</html>
