@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Térmico: Ciclo Heat Pipe y Estaciones</title>
+    <style>
+        :root {
+            --solar-orange: #f39c12;
+            --tech-dark: #2c3e50;
+            --cold-blue: #3498db;
+            --hot-red: #e74c3c;
+            --copper: #d35400;
+            --sun-yellow: #f1c40f;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: #eaeff2; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .main-card { max-width: 900px; width: 100%; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); box-sizing: border-box; }
+        
+        h1 { color: var(--tech-dark); text-align: center; font-size: 1.5rem; border-bottom: 3px solid var(--solar-orange); padding-bottom: 10px; margin-top: 0; }
+
+        /* CALCULADOR Y CONTROLES */
+        .controls-grid { background: var(--tech-dark); color: white; padding: 20px; border-radius: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .input-group { display: flex; flex-direction: column; }
+        label { font-size: 0.85rem; margin-bottom: 5px; color: #bdc3c7; }
+        input, select { padding: 8px; border-radius: 5px; border: none; font-size: 1rem; }
+        
+        .result-panel { grid-column: 1 / -1; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; text-align: center; }
+        .temp-val { font-size: 1.4rem; font-weight: bold; color: var(--solar-orange); }
+
+        /* ESQUEMA SVG REESCALADO */
+        .svg-container { width: 100%; height: auto; background: #fff; border: 2px solid #ecf0f1; border-radius: 10px; overflow: hidden; }
+        
+        /* Animaciones */
+        .vapor { fill: none; stroke: #fff; stroke-width: 3; stroke-dasharray: 4,6; animation: rise 1s linear infinite; display: none; }
+        @keyframes rise { from { stroke-dashoffset: 20; } to { stroke-dashoffset: 0; } }
+        
+        #sun-light { transition: all 0.5s ease; transform-origin: center; }
+        .label-text { font-size: 13px; fill: var(--tech-dark); font-weight: 500; }
+    </style>
+</head>
+<body>
+
+<div class="main-card">
+    <h1>Laboratorio Solar: Heat Pipe 100L (Verano vs Invierno)</h1>
+
+    <div class="controls-grid">
+        <div class="input-group">
+            <label>Temperatura Base (°C):</label>
+            <input type="number" id="baseTemp" value="15" oninput="updateSim()">
+        </div>
+        <div class="input-group">
+            <label>Estación:</label>
+            <select id="season" onchange="updateSim()">
+                <option value="summer">☀️ Verano (Alta Radiación)</option>
+                <option value="winter">❄️ Invierno (Baja Radiación)</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>Horas de Sol (0-10):</label>
+            <input type="range" id="sunHours" min="0" max="10" step="0.5" value="0" oninput="updateSim()">
+        </div>
+        <div class="result-panel">
+            <span>Temperatura Final Estimada:</span><br>
+            <span class="temp-val" id="resultLabel">15.0°C</span>
+        </div>
+    </div>
+
+    <div class="svg-container">
+        <svg viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+            <!-- FONTO CIELO -->
+            <rect width="800" height="450" fill="#f8fbff" />
+
+            <!-- SOL INTERACTIVO -->
+            <g id="sun-group" transform="translate(150, 80)">
+                <circle id="sun-core" r="30" fill="var(--sun-yellow)" />
+                <circle id="sun-glow" r="40" fill="var(--sun-yellow)" opacity="0.3">
+                    <animate attributeName="r" values="35;45;35" dur="3s" repeatCount="indefinite" />
+                </circle>
+            </g>
+
+            <!-- GRADIENTE DEL TANQUE -->
+            <defs>
+                <linearGradient id="tankFill" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop id="grad-cold" offset="0%" stop-color="#3498db" />
+                    <stop id="grad-mid" offset="50%" stop-color="#3498db" />
+                    <stop id="grad-hot" offset="100%" stop-color="#e74c3c" />
+                </linearGradient>
+            </defs>
+
+            <!-- TANQUE 100L -->
+            <rect x="350" y="100" width="380" height="160" rx="40" fill="url(#tankFill)" stroke="#7f8c8d" stroke-width="4" />
+            <text x="470" y="190" fill="white" font-weight="bold" font-size="22">100 LITROS</text>
+            <text x="360" y="90" class="label-text">Estratificación: El calor sube ↑</text>
+
+            <!-- HEAT PIPE DETALLE -->
+            <g transform="rotate(30, 200, 350)">
+                <!-- Tubo vacío -->
+                <rect x="150" y="100" width="60" height="300" rx="30" fill="rgba(200,230,255,0.4)" stroke="#bdc3c7" />
+                <!-- Varilla Cobre -->
+                <rect x="175" y="120" width="10" height="260" fill="var(--copper)" />
+                <!-- Bulbo/Condensador -->
+                <ellipse cx="180" cy="115" rx="16" ry="22" fill="var(--copper)" />
+                <!-- Animación Fluido -->
+                <path d="M 180 350 L 180 130" id="vapor-path" class="vapor" />
+            </g>
+
+            <!-- EXPLICACIONES (Dentro del recuadro) -->
+            <rect x="30" y="320" width="740" height="110" rx="10" fill="white" stroke="#eee" />
+            <text x="50" y="350" class="label-text">1. Los tubos de vacío captan radiación y calientan el líquido interno [3].</text>
+            <text x="50" y="375" class="label-text">2. El fluido se evapora, sube al bulbo y transfiere calor al tanque [4].</text>
+            <text x="50" y="400" class="label-text">3. El agua caliente es menos densa y se acumula en la parte superior [1].</text>
+            <text x="450" y="350" class="label-text" id="season-info">• Radiación: Optima</text>
+            <text x="450" y="375" class="label-text">• Fluido Caloportador: Ciclo activo</text>
+        </svg>
+    </div>
+</div>
+
+<script>
+    function updateSim() {
+        const base = parseFloat(document.getElementById('baseTemp').value) || 0;
+        const hours = parseFloat(document.getElementById('sunHours').value);
+        const season = document.getElementById('season').value;
+        const resultLabel = document.getElementById('resultLabel');
+        const sun = document.getElementById('sun-group');
+        const vapor = document.getElementById('vapor-path');
+        const seasonInfo = document.getElementById('season-info');
+
+        // Lógica de cálculo técnica:
+        // En Verano: ~9°C de aumento por hora (Radiación directa alta)
+        // En Invierno: ~4.5°C de aumento por hora (Inclinación y horas menos intensas)
+        let rate = (season === 'summer') ? 9 : 4.5;
+        let increase = hours * rate;
+        let final = Math.min(base + increase, 98); // No superar punto de ebullición
+
+        resultLabel.innerText = final.toFixed(1) + "°C";
+
+        // Animación del SOL
+        // El sol crece con las horas (representando la energía acumulada) y es más grande en verano
+        let sunScale = (season === 'summer' ? 1.2 : 0.7) + (hours * 0.1);
+        sun.setAttribute('transform', `translate(150, 80) scale(${sunScale})`);
+        document.getElementById('sun-core').setAttribute('fill', season === 'summer' ? '#f1c40f' : '#f39c12');
+
+        // Animación del Fluido (Vapor)
+        vapor.style.display = hours > 0 ? 'block' : 'none';
+        seasonInfo.innerText = `• Radiación ${season === 'summer' ? 'Verano' : 'Invierno'}: ${rate}°C/hr`;
+
+        // Actualizar Estratificación (Gradiente del Tanque)
+        const hotPercent = Math.min(((final - base) / 60) * 100, 100);
+        const midStop = document.getElementById('grad-mid');
+        midStop.setAttribute('offset', (100 - hotPercent) + "%");
+        
+        if(hours > 0) {
+            document.getElementById('grad-hot').setAttribute('stop-color', '#e74c3c');
+        } else {
+            document.getElementById('grad-hot').setAttribute('stop-color', '#3498db');
+        }
+    }
+    updateSim();
+</script>
+
+</body>
+</html>
