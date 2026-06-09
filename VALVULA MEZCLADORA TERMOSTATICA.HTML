@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador: Válvula Mezcladora Termostática</title>
+    <style>
+        :root {
+            --hot-red: #e74c3c;
+            --cold-blue: #3498db;
+            --mix-orange: #f39c12;
+            --tech-dark: #2c3e50;
+            --brass: #d4af37;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: #eaeff2; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        .main-card { max-width: 900px; width: 100%; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); box-sizing: border-box; }
+        
+        h1 { color: var(--tech-dark); text-align: center; font-size: 1.4rem; border-bottom: 3px solid var(--mix-orange); padding-bottom: 8px; margin: 0 0 15px 0; }
+
+        /* PANEL DE CONTROLES */
+        .controls { background: var(--tech-dark); color: white; padding: 15px; border-radius: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .control-group { display: flex; flex-direction: column; }
+        label { font-size: 0.85rem; margin-bottom: 5px; color: #bdc3c7; }
+        input[type="range"] { cursor: pointer; }
+        
+        .safety-btn { grid-column: span 2; padding: 10px; border: none; border-radius: 5px; background: #95a5a6; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .safety-active { background: #c0392b; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+        /* ÁREA GRÁFICA */
+        .svg-container { width: 100%; background: #fdfdfd; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+        .flow-path { fill: none; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 10, 15; animation: dash 1.5s linear infinite; }
+        @keyframes dash { to { stroke-dashoffset: -25; } }
+        
+        /* EXPLICACIÓN TÉCNICA */
+        .info-panel { margin-top: 15px; background: #f8f9fa; border: 1px solid #eee; padding: 15px; border-radius: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .info-box h4 { margin: 0 0 5px 0; font-size: 0.9rem; color: var(--tech-dark); border-left: 3px solid var(--mix-orange); padding-left: 8px; }
+        .info-box p { margin: 0; font-size: 0.8rem; line-height: 1.4; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="main-card">
+    <h1>Válvula Mezcladora: Seguridad en Agua Caliente</h1>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Temperatura Agua Solar (Entrada H): <span id="valH">80</span>°C</label>
+            <input type="range" id="tempHot" min="40" max="95" value="80" oninput="updateMix()">
+        </div>
+        <div class="control-group">
+            <label>Seteo de Mezcla (MIX): <span id="valS">42</span>°C</label>
+            <input type="range" id="tempSet" min="35" max="50" value="42" oninput="updateMix()">
+        </div>
+        <button id="safetyBtn" class="safety-btn" onclick="toggleColdWater()">SIMULAR CORTE DE AGUA FRÍA (SEGURIDAD)</button>
+    </div>
+
+    <div class="svg-container">
+        <svg viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+            <!-- Cuerpo de la Válvula -->
+            <path d="M 350 150 L 450 150 L 450 300 L 350 300 Z" fill="var(--brass)" stroke="#b8860b" stroke-width="2"/>
+            <circle cx="400" cy="150" r="40" fill="var(--tech-dark)" /> <!-- Perilla -->
+            <text x="385" y="155" fill="white" font-size="12" font-weight="bold">SET</text>
+
+            <!-- Puerto H (Caliente) -->
+            <path d="M 200 225 L 350 225" stroke="#bdc3c7" stroke-width="12" fill="none" />
+            <rect x="250" y="205" width="40" height="40" rx="5" fill="#95a5a6" /> <!-- Retención -->
+            <text x="210" y="215" fill="var(--hot-red)" font-weight="bold">ENTRADA H</text>
+
+            <!-- Puerto C (Fría) -->
+            <path d="M 600 225 L 450 225" stroke="#bdc3c7" stroke-width="12" fill="none" />
+            <rect x="510" y="205" width="40" height="40" rx="5" fill="#95a5a6" /> <!-- Retención -->
+            <text x="540" y="215" fill="var(--cold-blue)" font-weight="bold">ENTRADA C</text>
+
+            <!-- Puerto MIX (Salida) -->
+            <path d="M 400 300 L 400 420 L 750 420" stroke="#bdc3c7" stroke-width="12" fill="none" />
+            <text x="600" y="410" fill="var(--mix-orange)" font-weight="bold">SALIDA MEZCLADA (A LA CASA)</text>
+
+            <!-- Animaciones de Flujo -->
+            <path id="flowH" d="M 50 225 L 350 225" class="flow-path" stroke="var(--hot-red)" />
+            <path id="flowC" d="M 750 225 L 450 225" class="flow-path" stroke="var(--cold-blue)" />
+            <path id="flowMix" d="M 400 300 L 400 420 L 750 420" class="flow-path" stroke="var(--mix-orange)" />
+
+            <!-- Sensor de Cera Interno -->
+            <rect id="piston" x="385" y="210" width="30" height="15" rx="2" fill="white" opacity="0.8" />
+            <text x="365" y="270" font-size="10" fill="white">Pistón Termostático</text>
+        </svg>
+    </div>
+
+    <div class="info-panel">
+        <div class="info-box">
+            <h4>Funcionamiento Automático</h4>
+            <p>Un **sensor de cera** interno se expande con el calor, moviendo un pistón que regula la entrada de agua fría y caliente para mantener el seteo [2].</p>
+        </div>
+        <div class="info-box">
+            <h4>Seguridad Antiquemaduras</h4>
+            <p id="safetyText">Si el agua solar supera los 80°C, la válvula inyecta agua fría de red para que el agua llegue a la casa a temperatura segura (ej. 42°C) [1].</p>
+        </div>
+        <div class="info-box">
+            <h4>Válvulas de Retención</h4>
+            <p>Es **obligatorio** colocarlas en las entradas H y C para evitar que el agua caliente entre en la cañería fría por diferencia de presión [4].</p>
+        </div>
+        <div class="info-box">
+            <h4>Protección de Cañerías</h4>
+            <p>Al regular la temperatura, se evita que el agua hirviendo deforme o dañe las tuberías internas de **termofusión** (PPR) de la vivienda [5].</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let coldWaterCut = false;
+
+    function toggleColdWater() {
+        coldWaterCut = !coldWaterCut;
+        const btn = document.getElementById('safetyBtn');
+        const text = document.getElementById('safetyText');
+        
+        if (coldWaterCut) {
+            btn.classList.add('safety-active');
+            btn.innerText = "¡ALERTA! AGUA FRÍA CORTADA - VÁLVULA BLOQUEADA";
+            text.innerHTML = "<b style='color:red'>Protección activa:</b> Al detectar falta de agua fría, la válvula bloquea el paso caliente para evitar quemaduras instantáneas [2].";
+        } else {
+            btn.classList.remove('safety-active');
+            btn.innerText = "SIMULAR CORTE DE AGUA FRÍA (SEGURIDAD)";
+            text.innerText = "Si el agua solar supera los 80°C, la válvula inyecta agua fría de red para mantener el confort.";
+        }
+        updateMix();
+    }
+
+    function updateMix() {
+        const tempH = parseInt(document.getElementById('tempHot').value);
+        const tempS = parseInt(document.getElementById('tempSet').value);
+        document.getElementById('valH').innerText = tempH;
+        document.getElementById('valS').innerText = tempS;
+
+        const flowH = document.getElementById('flowH');
+        const flowC = document.getElementById('flowC');
+        const flowMix = document.getElementById('flowMix');
+        const piston = document.getElementById('piston');
+
+        if (coldWaterCut) {
+            flowH.style.display = 'none';
+            flowC.style.display = 'none';
+            flowMix.style.display = 'none';
+            piston.setAttribute('x', '370'); // Pistón bloqueando
+        } else {
+            flowH.style.display = 'block';
+            flowC.style.display = 'block';
+            flowMix.style.display = 'block';
+            
+            // Simular movimiento de pistón: a más temperatura solar, más se mueve para dejar pasar fría
+            const pistonPos = 385 + (tempH - 60) * 0.5;
+            piston.setAttribute('x', pistonPos);
+            
+            // Color de la mezcla basado en el seteo
+            const hue = 240 - (tempS - 35) * 10; 
+            flowMix.style.stroke = `hsl(${hue < 0 ? 0 : hue}, 80%, 50%)`;
+        }
+    }
+    updateMix();
+</script>
+
+</body>
+</html>
