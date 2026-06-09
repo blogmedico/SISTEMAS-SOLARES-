@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instalación Solar Integrativa - Maqueta Técnica</title>
+    <style>
+        :root {
+            --solar-orange: #f39c12;
+            --tech-dark: #2c3e50;
+            --cold-blue: #3498db;
+            --hot-red: #e74c3c;
+            --ionis-green: #27ae60;
+            --brass: #d4af37;
+            --pipe-gray: #bdc3c7;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: #eaeff2; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .main-container { max-width: 1100px; width: 100%; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        
+        h1 { color: var(--tech-dark); text-align: center; font-size: 1.5rem; border-bottom: 4px solid var(--solar-orange); padding-bottom: 10px; margin-top: 0; }
+
+        /* NIVELES DE LA CASA */
+        .level-label { font-weight: bold; color: #7f8c8d; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 5px; }
+        
+        /* CONTROLES INTERACTIVOS */
+        .control-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; background: var(--tech-dark); padding: 15px; border-radius: 10px; }
+        .btn-mode { padding: 12px; border: none; border-radius: 5px; color: white; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        #btn-summer { background: var(--solar-orange); }
+        #btn-winter { background: #95a5a6; }
+        #btn-maint { background: var(--cold-blue); }
+        .btn-mode:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+        /* SVG DINÁMICO */
+        .svg-canvas { width: 100%; background: #fdfdfd; border: 2px solid #ddd; border-radius: 10px; }
+        .flow-line { fill: none; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 10, 15; animation: flowMove 1s linear infinite; display: none; }
+        @keyframes flowMove { to { stroke-dashoffset: -25; } }
+        
+        .pipe-static { fill: none; stroke: var(--pipe-gray); stroke-width: 8; stroke-linejoin: round; }
+        .component-label { font-size: 12px; font-weight: bold; fill: var(--tech-dark); }
+        .valve-node { transition: 0.3s; cursor: help; }
+
+        /* PANEL DE INFORMACIÓN */
+        .info-panel { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 5px solid var(--solar-orange); }
+        .info-box h4 { margin: 0 0 10px 0; color: var(--tech-dark); display: flex; align-items: center; gap: 8px; }
+        .info-box p { margin: 0; font-size: 0.9rem; line-height: 1.5; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <h1>Visión Integrativa: Instalación Solar Heat Pipe + Respaldo Gas</h1>
+
+    <div class="control-panel">
+        <button class="btn-mode" id="btn-summer" onclick="setMode('summer')">☀️ MODO VERANO (100% Solar)</button>
+        <button class="btn-mode" id="btn-winter" onclick="setMode('winter')">☁️ MODO INVIERNO (Solar + Gas)</button>
+        <button class="btn-mode" id="btn-maint" onclick="setMode('maint')">🔧 MANTENIMIENTO (Solo Gas)</button>
+    </div>
+
+    <div class="level-label">Nivel Techo / Exterior</div>
+    <div class="svg-canvas">
+        <svg viewBox="0 0 900 650" xmlns="http://www.w3.org/2000/svg">
+            <!-- 1. ENTRADA DE AGUA Y IONIS -->
+            <path d="M 50 600 L 150 600 L 150 150 L 250 150" class="pipe-static" />
+            <rect x="125" y="450" width="50" height="60" rx="5" fill="var(--ionis-green)" id="ionis-unit" />
+            <text x="180" y="485" class="component-label">EQUIPO IONIS [1]</text>
+            <text x="30" y="620" class="component-label">ENTRADA RED</text>
+
+            <!-- 2. TERMOTANQUE SOLAR HEAT PIPE -->
+            <rect x="250" y="80" width="200" height="110" rx="40" fill="#ecf0f1" stroke="#7f8c8d" stroke-width="3" />
+            <text x="280" y="140" class="component-label">HEAT PIPE 200L [5]</text>
+            <!-- Venteo -->
+            <path d="M 350 80 L 350 30" class="pipe-static" stroke-width="4" />
+            <text x="360" y="45" class="component-label" style="font-size:10px">VENTEO (60cm)</text>
+
+            <!-- 3. PUENTE DE BYPASS (TECHO) -->
+            <path d="M 150 250 L 550 250 L 550 400" class="pipe-static" />
+            <text x="300" y="240" class="component-label" style="fill:var(--cold-blue)">PUENTE DE MANTENIMIENTO</text>
+
+            <!-- 4. BAJADA A CASA -->
+            <path d="M 450 130 L 650 130 L 650 300" class="pipe-static" /> <!-- Bajada caliente solar -->
+            
+            <!-- 5. NIVEL INTERIOR (CALEFÓN Y MEZCLADORA) -->
+            <rect x="40" y="530" width="820" height="2" fill="#eee" />
+            <text x="750" y="550" class="level-label">Interior Vivienda</text>
+
+            <!-- CALEFÓN -->
+            <rect x="500" y="400" width="100" height="80" fill="#34495e" />
+            <text x="520" y="445" class="component-label" style="fill:white">CALEFÓN</text>
+            
+            <!-- VÁLVULA MEZCLADORA TERMOSTÁTICA -->
+            <circle cx="750" cy="450" r="25" fill="var(--brass)" stroke="#b8860b" />
+            <text x="720" y="415" class="component-label">MEZCLADORA [3]</text>
+            <!-- Conexión C a mezcladora -->
+            <path d="M 150 500 L 750 500 L 750 475" class="pipe-static" />
+
+            <!-- CONSUMO FINAL -->
+            <path d="M 750 475 L 750 600 L 850 600" class="pipe-static" />
+            <text x="760" y="620" class="component-label">DUCHA / CONSUMO</text>
+
+            <!-- FLUJOS ANIMADOS -->
+            <path id="f-cold-entry" d="M 50 600 L 150 600 L 150 150 L 250 150" class="flow-line" stroke="var(--cold-blue)" />
+            <path id="f-solar-to-house" d="M 450 130 L 650 130 L 650 450 L 725 450" class="flow-line" stroke="var(--solar-orange)" />
+            <path id="f-solar-to-gas" d="M 450 130 L 650 130 L 650 350 L 600 350" class="flow-line" stroke="#f1c40f" />
+            <path id="f-gas-to-mix" d="M 550 480 L 550 530 L 700 530 L 725 460" class="flow-line" stroke="var(--hot-red)" />
+            <path id="f-bridge" d="M 150 250 L 550 250 L 550 400" class="flow-line" stroke="var(--cold-blue)" />
+            <path id="f-cold-to-mix" d="M 150 500 L 750 500 L 750 475" class="flow-line" stroke="var(--cold-blue)" />
+            <path id="f-final" d="M 775 450 L 800 450 L 800 600 L 850 600" class="flow-line" stroke="var(--hot-red)" />
+
+            <!-- VÁLVULAS (Círculos indicadores) -->
+            <circle id="v-in" cx="200" cy="150" r="10" fill="green" stroke="white" />
+            <circle id="v-bridge" cx="350" cy="250" r="10" fill="red" stroke="white" />
+            <circle id="v-gas" cx="650" cy="350" r="10" fill="green" stroke="white" />
+        </svg>
+    </div>
+
+    <div class="info-panel" id="tech-info">
+        <div class="info-box">
+            <h4>🛡️ Protección Inicial</h4>
+            <p>El agua de red pasa primero por el <b>Equipo IONIS</b>. Al ser modular y externo, protege toda la instalación desde el inicio modificando los carbonatos para evitar incrustaciones en el bulbo del Heat Pipe y el calefón [1, 2].</p>
+        </div>
+        <div class="info-box">
+            <h4>🌡️ Seguridad Térmica</h4>
+            <p>La <b>Válvula Mezcladora</b> en la entrada a la casa recibe el agua solar (que puede estar a 90°C) y la mezcla con agua fría de red para entregarla a unos seguros 42°C, protegiendo las cañerías de termofusión [4, 6].</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function setMode(mode) {
+        const flows = document.querySelectorAll('.flow-line');
+        flows.forEach(f => f.style.display = 'none');
+        
+        const vIn = document.getElementById('v-in');
+        const vBridge = document.getElementById('v-bridge');
+        const vGas = document.getElementById('v-gas');
+        const info = document.getElementById('tech-info');
+
+        if (mode === 'summer') {
+            document.getElementById('f-cold-entry').style.display = 'block';
+            document.getElementById('f-solar-to-house').style.display = 'block';
+            document.getElementById('f-cold-to-mix').style.display = 'block';
+            document.getElementById('f-final').style.display = 'block';
+            
+            vIn.setAttribute('fill', 'green');
+            vBridge.setAttribute('fill', 'red');
+            vGas.setAttribute('fill', 'red'); // Calefón puenteado
+
+            info.innerHTML = `
+                <div class="info-box"><h4>☀️ Funcionamiento Solar Directo</h4><p>El bypass dirige el agua caliente del tanque Heat Pipe directo a la mezcladora. El calefón a gas permanece apagado, logrando ahorro máximo [Manual Técnico].</p></div>
+                <div class="info-box"><h4>💧 Mezcla de Seguridad</h4><p>La mezcladora inyecta agua fría solo si el solar supera la temperatura de confort, evitando quemaduras instantáneas.</p></div>
+            `;
+        } 
+        else if (mode === 'winter') {
+            document.getElementById('f-cold-entry').style.display = 'block';
+            document.getElementById('f-solar-to-gas').style.display = 'block';
+            document.getElementById('f-gas-to-mix').style.display = 'block';
+            document.getElementById('f-cold-to-mix').style.display = 'block';
+            document.getElementById('f-final').style.display = 'block';
+
+            vIn.setAttribute('fill', 'green');
+            vBridge.setAttribute('fill', 'red');
+            vGas.setAttribute('fill', 'green');
+
+            info.innerHTML = `
+                <div class="info-box"><h4>☁️ Funcionamiento en Serie</h4><p>El agua sale precalentada del solar y entra al calefón. Este último detecta la temperatura y solo se enciende para cubrir el salto térmico faltante [Guía de Estudio].</p></div>
+                <div class="info-box"><h4>🔧 Conducción IPS</h4><p>Se utilizan cañerías Multicapa IPS Fusión para soportar la presión de red y conservar el calor en el trayecto desde el techo [7].</p></div>
+            `;
+        }
+        else if (mode === 'maint') {
+            document.getElementById('f-bridge').style.display = 'block';
+            document.getElementById('f-gas-to-mix').style.display = 'block';
+            document.getElementById('f-final').style.display = 'block';
+
+            vIn.setAttribute('fill', 'red');
+            vBridge.setAttribute('fill', 'green');
+            vGas.setAttribute('fill', 'green');
+
+            info.innerHTML = `
+                <div class="info-box"><h4>🔧 Modo Mantenimiento</h4><p>Se cierran las llaves del equipo solar para limpieza o cambio de ánodo. El agua fría "puentea" el techo y alimenta directamente al respaldo de gas.</p></div>
+                <div class="info-box"><h4>🛠️ IONIS Continuo</h4><p>Incluso en mantenimiento, el agua sigue pasando por el IONIS en la entrada principal, protegiendo el calefón de gas contra el sarro.</p></div>
+            `;
+        }
+    }
+    // Iniciar en modo verano por defecto
+    setMode('summer');
+</script>
+
+</body>
+</html>
