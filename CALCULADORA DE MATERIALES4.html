@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurador Solar Master: Selección de Sistemas</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f1f5f9; padding: 20px; color: #0f172a; }
+        .container { max-width: 1150px; margin: auto; background: white; padding: 35px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.1); border-top: 12px solid #2563eb; }
+        h1 { text-align: center; margin-bottom: 5px; color: #1e293b; font-weight: 800; }
+        .system-selector { background: #e0f2fe; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 2px solid #7dd3fc; display: flex; align-items: center; gap: 20px; }
+        .system-selector select { flex-grow: 1; padding: 12px; border-radius: 8px; border: 1px solid #0369a1; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+        
+        .main-grid { display: grid; grid-template-columns: 2.8fr 1.2fr; gap: 25px; }
+        section { margin-bottom: 25px; }
+        h3 { background: #1e293b; color: white; padding: 12px 18px; border-radius: 8px; font-size: 0.95rem; margin-bottom: 15px; display: flex; justify-content: space-between; }
+        
+        table { width: 100%; border-collapse: collapse; background: #fff; margin-bottom: 10px; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; }
+        th { background: #f8fafc; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+        
+        input[type="number"] { width: 80px; padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: bold; text-align: center; }
+        .sidebar { display: flex; flex-direction: column; gap: 25px; }
+        .card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 25px; border-radius: 15px; }
+        
+        .summary-panel { background: #ecfdf5; border: 2px solid #10b981; padding: 30px; border-radius: 18px; position: relative; box-shadow: 0 10px 20px rgba(16,185,129,0.1); }
+        .total-highlight { font-size: 3rem; font-weight: 900; color: #065f46; text-align: right; line-height: 1; margin-top: 15px; }
+        
+        #success-badge { 
+            display: none; position: absolute; top: -15px; right: 30px; background: #10b981; color: white; padding: 10px 20px; 
+            border-radius: 50px; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.1); animation: pop 0.4s; z-index: 10;
+        }
+        @keyframes pop { 0% {transform: scale(0.5);} 100% {transform: scale(1);} }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Configurador Técnico Solar Pro</h1>
+    <p style="text-align:center; color:#64748b; margin-top:0;">Optimización de Materiales y Presupuesto de Obra</p>
+
+    <div class="system-selector">
+        <label>🔧 <strong>TIPO DE INSTALACIÓN:</strong></label>
+        <select id="system-type" onchange="changeSystem()">
+            <option value="term-ais">Termosifón Atmosférico Aislado (Sin Bypass)</option>
+            <option value="term-by" selected>Termosifón con Bypass (Apoyo Gas/Corriente)</option>
+            <option value="heat-ais">Heat Pipe Presurizado Aislado (Sin Bypass)</option>
+            <option value="heat-by">Heat Pipe Máxima Eficiencia con Bypass</option>
+        </select>
+    </div>
+
+    <div class="main-grid">
+        <div class="content">
+            <section>
+                <h3>📦 Unidad Principal y Automatización <span id="sys-label" style="font-size:0.7rem; opacity:0.8;"></span></h3>
+                <table>
+                    <thead><tr><th>Descripción Técnica</th><th>Cant.</th><th>Precio ($)</th><th>Subtotal</th></tr></thead>
+                    <tbody id="body-main"></tbody>
+                </table>
+            </section>
+
+            <section>
+                <h3>🔧 Accesorios de Red y Seguridad (Fusión/Rosca)</h3>
+                <table>
+                    <thead><tr><th>Accesorio Crítico</th><th>Cant.</th><th>Precio ($)</th><th>Subtotal</th></tr></thead>
+                    <tbody id="body-acc"></tbody>
+                </table>
+            </section>
+        </div>
+
+        <div class="sidebar">
+            <div class="card">
+                <label>👷 <strong>Grado de Dificultad</strong></label>
+                <select id="diff-factor" onchange="calculate()">
+                    <option value="0.4">Bajo (Losa plana)</option>
+                    <option value="0.5" selected>Normal (Estándar 50%)</option>
+                    <option value="0.7">Alto (Techo tejas/Pendiente)</option>
+                    <option value="0.9">Crítico (Altura tinaco >2m)</option>
+                </select>
+            </div>
+
+            <div class="summary-panel">
+                <div id="success-badge">✅ ÉXITO TÉCNICO</div>
+                <div style="display:flex; justify-content:space-between;"><span>Materiales:</span> <span id="res-mats" style="font-weight:bold;">$ 0</span></div>
+                <div style="display:flex; justify-content:space-between; color:#2563eb; margin-top:5px;"><span>Mano de Obra (50% Base):</span> <span id="res-labor" style="font-weight:bold;">$ 0</span></div>
+                <hr style="border:0; border-top:1px solid #10b981; margin:20px 0;">
+                <div style="font-size:1rem; font-weight:bold; color:#065f46;">TOTAL ESTIMADO:</div>
+                <div class="total-highlight" id="res-total">$ 0</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const sysData = {
+        'term-ais': { main: [ {n: "Termotanque Solar 200L (Atmosférico)", q:1, p:480000}, {n: "Controlador TK-8A (Sensor+Válvula)", q:1, p:95000}, {n: "Resistencia Eléctrica 2000W", q:1, p:32000} ], acc: [ {n: "Kit Venteo (Jarro Aire IPS)", q:1, p:8500}, {n: "Ánodo Magnesio Antisarro", q:1, p:18000}, {n: "Válvula Retención Swing", q:1, p:14500} ] },
+        'term-by': { main: [ {n: "Termotanque Solar 200L", q:1, p:480000}, {n: "Controlador TK-8A Full", q:1, p:95000}, {n: "Resistencia Eléctrica 2000W", q:1, p:32000} ], acc: [ {n: "Válvula Mezcladora Termostática", q:1, p:42000}, {n: "Kit Bypass (3 Llaves Paso + T)", q:1, p:55000}, {n: "Válvula Retención Swing", q:1, p:14500}, {n: "Uniones Dobles Fusión IPS", q:4, p:5500} ] },
+        'heat-ais': { main: [ {n: "Termotanque HEAT PIPE 200L", q:1, p:850000}, {n: "Controlador TK-8A Pro", q:1, p:95000}, {n: "Bomba Presurizadora Caudal", q:1, p:135000} ], acc: [ {n: "Tramo Cobre 1.5m (Salida)", q:1, p:28000}, {n: "Venteo Reforzado", q:1, p:12000}, {n: "Ánodo de Magnesio", q:1, p:18000} ] },
+        'heat-by': { main: [ {n: "Termotanque HEAT PIPE 200L", q:1, p:850000}, {n: "Controlador TK-8A Pro", q:1, p:95000}, {n: "Bomba Presurizadora", q:1, p:135000} ], acc: [ {n: "Válvula Mezcladora Profesional", q:1, p:45000}, {n: "Arreglo Bypass (3 Válvulas)", q:1, p:58000}, {n: "Salida Cobre 1.5m", q:1, p:28000}, {n: "Válvula Retención Columpio", q:2, p:15500} ] }
+    };
+
+    const commonAcc = [ {n: "Caño Maxum S 3.2 (Aislado) 4m", q:4, p:21000}, {n: "Codos 90° Fusión AcquaSystem", q:10, p:1350}, {n: "Uniones Mixtas (Terminación)", q:6, p:4500} ];
+
+    const audio = new (window.AudioContext || window.webkitAudioContext)();
+    function beep() { const o=audio.createOscillator(); const g=audio.createGain(); o.connect(g); g.connect(audio.destination); o.frequency.value=750; o.start(); o.stop(audio.currentTime+0.15); }
+
+    function changeSystem() {
+        const type = document.getElementById('system-type').value;
+        const mainBody = document.getElementById('body-main');
+        const accBody = document.getElementById('body-acc');
+        mainBody.innerHTML = ""; accBody.innerHTML = "";
+        
+        sysData[type].main.forEach((it, i) => renderRow(mainBody, 'm', i, it));
+        [...sysData[type].acc, ...commonAcc].forEach((it, i) => renderRow(accBody, 'a', i, it));
+        
+        calculate();
+    }
+
+    function renderRow(target, prefix, i, it) {
+        target.innerHTML += `<tr><td>${it.n}</td><td><input type="number" id="${prefix}-q-${i}" value="${it.q}" onchange="calculate()"></td><td><input type="number" id="${prefix}-p-${i}" value="${it.p}" onchange="calculate()"></td><td id="${prefix}-s-${i}" style="font-weight:bold;">$ 0</td></tr>`;
+    }
+
+    function calculate() {
+        let totalMat = 0;
+        const type = document.getElementById('system-type').value;
+        const mainCount = sysData[type].main.length;
+        const accCount = sysData[type].acc.length + commonAcc.length;
+
+        for(let i=0; i<mainCount; i++) totalMat += updateRow('m', i);
+        for(let i=0; i<accCount; i++) totalMat += updateRow('a', i);
+
+        const diff = parseFloat(document.getElementById('diff-factor').value);
+        const labor = totalMat * diff;
+        
+        document.getElementById('res-mats').innerText = `$ ${totalMat.toLocaleString()}`;
+        document.getElementById('res-labor').innerText = `$ ${labor.toLocaleString()}`;
+        document.getElementById('res-total').innerText = `$ ${(totalMat + labor).toLocaleString()}`;
+        
+        showSuccess();
+    }
+
+    function updateRow(p, i) {
+        const q = parseFloat(document.getElementById(`${p}-q-${i}`).value) || 0;
+        const pr = parseFloat(document.getElementById(`${p}-p-${i}`).value) || 0;
+        const sub = q * pr;
+        document.getElementById(`${p}-s-${i}`).innerText = `$ ${sub.toLocaleString()}`;
+        return sub;
+    }
+
+    function showSuccess() {
+        const b = document.getElementById('success-badge'); b.style.display = 'block'; beep();
+        setTimeout(() => b.style.display = 'none', 2000);
+    }
+
+    changeSystem();
+</script>
+</body>
+</html>
