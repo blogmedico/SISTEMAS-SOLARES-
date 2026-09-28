@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suite Técnica: Diagnóstico 7 Pasos & Calculadora de Neutro</title>
+    <style>
+        :root {
+            --primary: #1e3d59;
+            --accent: #17b890;
+            --danger: #e63946;
+            --warning: #f4a261;
+            --bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --text: #2b2d42;
+            --border: #dcdfe6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 950px;
+            width: 100%;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            margin: 0 0 5px 0;
+            font-size: 1.5rem;
+        }
+
+        header p {
+            margin: 0;
+            opacity: 0.85;
+            font-size: 0.95rem;
+        }
+
+        /* BOTONES DE PESTAÑA */
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 14px 15px;
+            background-color: #cbd5e1;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* TARJETAS */
+        .card {
+            background: var(--card-bg);
+            border-left: 5px solid var(--primary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            background-color: var(--primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        select, input[type="text"], input[type="number"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+        }
+
+        /* CUADROS DINÁMICOS DE EXPLICACIÓN DE OPCIONES */
+        .info-explicacion {
+            background-color: #eef6fc;
+            border-left: 4px solid var(--primary);
+            padding: 10px 14px;
+            margin-top: 8px;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            color: #1e3d59;
+            line-height: 1.4;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .checkbox-label input {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-action {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background 0.2s;
+        }
+
+        .btn-action:hover {
+            background-color: #139a78;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* GRID CALCULADORA */
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .phase-box {
+            background-color: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .phase-box.phase-r { border-top: 4px solid #e63946; }
+        .phase-box.phase-s { border-top: 4px solid #f4a261; }
+        .phase-box.phase-t { border-top: 4px solid #2a9d8f; }
+
+        .preset-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-preset {
+            background-color: #e2e8f0;
+            border: 1px solid #cbd5e1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .btn-preset:hover {
+            background-color: #cbd5e1;
+        }
+
+        /* RESULTADOS */
+        .results-panel {
+            background: #ffffff;
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: white;
+            margin-top: 5px;
+        }
+
+        .bg-danger { background-color: var(--danger); }
+        .bg-warning { background-color: var(--warning); }
+        .bg-success { background-color: var(--accent); }
+
+        .alert-box {
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .alert-danger { background-color: #fde8e8; color: var(--danger); border-left: 4px solid var(--danger); }
+        .alert-warning { background-color: #fef3c7; color: #b45309; border-left: 4px solid var(--warning); }
+        .alert-success { background-color: #e6f4ea; color: #137333; border-left: 4px solid var(--accent); }
+
+        @media print {
+            .nav-tabs, .btn-action, .preset-buttons { display: none; }
+            body { background: white; padding: 0; }
+            .container { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>⚡ Suite Técnica: Diagnóstico 7 Pasos & Calculadora de Neutro</h1>
+        <p>Herramienta Lógica de Campo e Ingeniería de Sistemas Trifásicos</p>
+    </header>
+
+    <!-- PESTAÑAS PRINCIPALES -->
+    <div class="nav-tabs">
+        <button id="btn-tab-chk" class="tab-btn active" onclick="cambiarPestana('tab-checklist', this)">
+    <a href="file:///G:/pendrive/CURSO%20DE%20ELECTRICIDAD%20COMPRADO%20POR%20INTERNET%20MUY%20BUENO/PROTOCOLOS%20Y%20TABLEROS%20ELECTRICOS%20EN%20CANVA%20PARA%20DISE%C3%91AR/El%20checklist%20de%20los%20%207%20pasos%20para%20diagnosticar%20en%20campo%20(1).pdf" target="_blank" style="text-decoration: none; color: inherit;">
+        📋 Checklist 7 Pasos (Diagnóstico)
+    </a>
+</button>
+        <button id="btn-tab-calc" class="tab-btn" onclick="cambiarPestana('tab-calculadora', this)">🧮 Calculadora Corte de Neutro (3F)</button>
+    </div>
+
+    <!-- PESTAÑA 1: CHECKLIST 7 PASOS -->
+    <div id="tab-checklist" class="tab-content active">
+        <form id="checklist-form">
+            <div class="card">
+                <h2><span class="badge">Paso 1</span> Seguridad y Des-energizado (LOTO)</h2>
+                <div class="form-group">
+                    <label>Tensión Cero medida en bornes de entrada del tablero:</label>
+                    <select id="p1-tension-cero" onchange="actualizarExplicaciones()">
+                        <option value="ok">Sí - Confirmado 0V (Fase-Neutro, Fase-Fase, Fase-Tierra)</option>
+                        <option value="peligro">NO - Tensión o retorno detectado (>0V)</option>
+                        <option value="vivo">Trabajo bajo tensión autorizado con EPP especial</option>
+                    </select>
+                    <div class="info-explicacion" id="exp-p1"></div>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="p1-loto"> Se colocó candado/tarjeta de bloqueo LOTO
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="badge">Paso 2</span> Relevamiento Visual (Barrido con Linterna)</h2>
+                <div class="form-group">
+                    <label>Anomalías visuales observadas:</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label"><input type="checkbox" value="carbonizacion" class="p2-visual"> Marcas de carbonización o arco eléctrico</label>
+                        <label class="checkbox-label"><input type="checkbox" value="flojos" class="p2-visual"> Bornes/tornillos flojos (falso contacto)</label>
+                        <label class="checkbox-label"><input type="checkbox" value="aislamiento" class="p2-visual"> Aislamiento fundido o cables pelados</label>
+                        <label class="checkbox-label"><input type="checkbox" value="termico" class="p2-visual"> Relé térmico o guardamotor disparado</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="badge">Paso 3</span> Lectura de Plano y Mando</h2>
+                <div class="form-group">
+                    <label>Disponibilidad de esquema eléctrico:</label>
+                    <select id="p3-plano" onchange="actualizarExplicaciones()">
+                        <option value="plano-ok">Plano disponible: Traza de mando clara</option>
+                        <option value="esquema-mano">Sin plano: Se esbozó esquema a mano de 24VDC/CA</option>
+                    </select>
+                    <div class="info-explicacion" id="exp-p3"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="badge">Paso 4</span> Tensiones de Alimentación</h2>
+                <div class="form-group">
+                    <label>Medición de entrada y salida de protecciones:</label>
+                    <select id="p4-alimentacion" onchange="actualizarExplicaciones()">
+                        <option value="ok">Tensiones correctas y estables</option>
+                        <option value="falla-proteccion">Tensión entra pero NO sale de la protección</option>
+                        <option value="asimetria">Asimetría de fases / Desbalance severo</option>
+                        <option value="mando-caido">Fuente de mando degradada (ej. 18V en lugar de 24V)</option>
+                    </select>
+                    <div class="info-explicacion" id="exp-p4"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="badge">Paso 5</span> Verificación del Circuito de Mando</h2>
+                <div class="form-group">
+                    <label>Seguimiento punto a punto de la señal:</label>
+                    <select id="p5-mando" onchange="mostrarDetallePaso5(); actualizarExplicaciones();">
+                        <option value="ok">Señal llega correctamente a la bobina del actuador</option>
+                        <option value="interrumpido">Señal se interrumpe entre contactos en serie</option>
+                    </select>
+                    <div class="info-explicacion" id="exp-p5"></div>
+                </div>
+                <div class="form-group" id="p5-detalle-container" style="display:none;">
+                    <label>Tramo específico (Último CON tensión y primero SIN tensión):</label>
+                    <input type="text" id="p5-elemento" placeholder="Ej: Entre salida de Parada de Emergencia y entrada de Térmico">
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="badge">Paso 6</span> Comprobación del Componente Sospechoso</h2>
+                <div class="form-group">
+                    <label>Prueba individual en desenergizado:</label>
+                    <select id="p6-componente" onchange="actualizarExplicaciones()">
+                        <option value="ninguno">Sin componente aislado aún</option>
+                        <option value="bobina-abierta">Bobina abierta (Resistencia R = ∞)</option>
+                        <option value="bobina-corto">Bobina en cortocircuito (Resistencia R = 0 Ω)</option>
+                        <option value="contacto-abierto">Contacto NC permanentemente abierto</option>
+                        <option value="termico-desajustado">Térmico salta pero corriente real medida con pinza es normal</option>
+                    </select>
+                    <div class="info-explicacion" id="exp-p6"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="badge">Paso 7</span> Documentación</h2>
+                <div class="form-group">
+                    <label>Técnico a cargo:</label>
+                    <input type="text" id="p7-tecnico" placeholder="Nombre completo">
+                </div>
+                <div class="form-group">
+                    <label>Observaciones / Acción correctiva:</label>
+                    <textarea id="p7-obs" rows="2" placeholder="Acción realizada..."></textarea>
+                </div>
+            </div>
+
+            <button type="button" class="btn-action" onclick="generarDiagnostico()">🔍 GENERAR DIAGNÓSTICO DE CAMPO</button>
+        </form>
+
+        <div id="resultado-checklist" class="results-panel" style="display:none;">
+            <h2>📑 Reporte de Diagnóstico y Causa Raíz</h2>
+            <div id="alerta-seguridad-chk"></div>
+            <h3>🎯 Causa Raíz Identificada:</h3>
+            <ul id="lista-diagnostico-chk" style="padding-left:20px;"></ul>
+            <h3>📌 Protocolo de Reparación:</h3>
+            <p id="solucion-sugerida-chk"></p>
+            <button class="btn-action btn-secondary" onclick="window.print()">🖨️ Imprimir / Guardar Reporte PDF</button>
+        </div>
+    </div>
+
+    <!-- PESTAÑA 2: CALCULADORA CORTE DE NEUTRO TRIFÁSICO -->
+    <div id="tab-calculadora" class="tab-content">
+        <div class="card">
+            <h2>⚠️ Simulación Matemática de Corte / Rotura del Conductor de Neutro</h2>
+            <p style="font-size:0.9rem; color:#555;">
+                Al romperse el neutro en una red trifásica, el punto neutro de las cargas se vuelve flotante (N'). 
+                Mediante el <strong>Teorema de Millman</strong>, esta calculadora obtiene el desplazamiento de tensión y muestra qué cargas sufrirán sobretensión o subtensión.
+            </p>
+
+            <div class="form-group">
+                <label>Tensión Nominal de Fase (V0):</label>
+                <select id="calc-v0">
+                    <option value="220" selected>220 V (Latinoamérica / Argentina / Chile / Perú)</option>
+                    <option value="230">230 V (España / Europa)</option>
+                </select>
+            </div>
+
+            <label>Cargar ejemplos rápidos:</label>
+            <div class="preset-buttons">
+                <button type="button" class="btn-preset" onclick="cargarEjemplo(300, 3000, 30000)">Ejemplo Masterclass (300W / 3kW / 30kW)</button>
+                <button type="button" class="btn-preset" onclick="cargarEjemplo(200, 1500, 5000)">Desbalance Alto (200W / 1.5kW / 5kW)</button>
+                <button type="button" class="btn-preset" onclick="cargarEjemplo(2000, 2000, 2000)">Sistema Equilibrado (2kW / 2kW / 2kW)</button>
+            </div>
+
+            <div class="calc-grid">
+                <div class="phase-box phase-r">
+                    <h3 style="margin-top:0; color:#e63946;">Fase R (L1)</h3>
+                    <div class="form-group">
+                        <label>Potencia Consumida en Fase R (Watts):</label>
+                        <input type="number" id="pr-watts" value="300" min="10" step="10">
+                    </div>
+                </div>
+
+                <div class="phase-box phase-s">
+                    <h3 style="margin-top:0; color:#f4a261;">Fase S (L2)</h3>
+                    <div class="form-group">
+                        <label>Potencia Consumida en Fase S (Watts):</label>
+                        <input type="number" id="ps-watts" value="3000" min="10" step="10">
+                    </div>
+                </div>
+
+                <div class="phase-box phase-t">
+                    <h3 style="margin-top:0; color:#2a9d8f;">Fase T (L3)</h3>
+                    <div class="form-group">
+                        <label>Potencia Consumida en Fase T (Watts):</label>
+                        <input type="number" id="pt-watts" value="30000" min="10" step="10">
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn-action" onclick="calcularCorteNeutro()">⚡ CALCULAR TENSIONES Y CORRIENTES TRAS EL CORTE DE NEUTRO</button>
+        </div>
+
+        <div id="resultado-calc" class="results-panel" style="display:none;">
+            <h2>📊 Resultados de la Simulación de Neutro Flotante</h2>
+            <div id="alerta-neutro-res"></div>
+            <div style="background:#edf2f7; padding:12px 15px; border-radius:6px; margin-bottom:15px;">
+                <strong>Tensión de Desplazamiento de Neutro (|VN'N|):</strong> 
+                <span id="v-neutro-desplazamiento" style="font-size:1.2rem; font-weight:bold; color:var(--primary);">--</span>
+            </div>
+            <div class="calc-grid" id="grid-resultados-fases"></div>
+            <h3>💡 Explicación Técnica de la Avería:</h3>
+            <p id="explicacion-tecnica" style="line-height:1.5; font-size:0.95rem;"></p>
+            <button class="btn-action btn-secondary" onclick="window.print()">🖨️ Imprimir / Guardar Simulación PDF</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // DICCIONARIO DE EXPLICACIONES TÉCNICAS
+    var explicaciones = {
+        p1: {
+            'ok': '💡 <strong>Significado Técnico:</strong> Tensión Cero verificada en bornes (L-N, L-L y L-PE). Es el estado obligatorio para iniciar el trabajo seguro dentro del tablero.',
+            'peligro': '⚠️ <strong>Significado Técnico:</strong> Presencia de voltaje activo o retorno insospechado por neutro o transformador secundario. Detener inmediatamente.',
+            'vivo': '🛠️ <strong>Significado Técnico:</strong> Procedimiento habilitado solo para mediciones en caliente. Requiere EPP dieléctrico certificado y herramientas aisladas 1000V.'
+        },
+        p3: {
+            'plano-ok': '📄 <strong>Significado Técnico:</strong> Permite rastrear la cadena lógica de mandos e interlocks de seguridad siguiendo la nomenclatura oficial del fabricante.',
+            'esquema-mano': '✍️ <strong>Significado Técnico:</strong> Se debe relevar manualmente la ruta de cableado desde la fuente de mando (24V/220V) para construir la secuencia lógica antes de medir.'
+        },
+        p4: {
+            'ok': '⚡ <strong>Significado Técnico:</strong> Los niveles de tensión de la red y del circuito de mando están dentro de los rangos nominales de operación.',
+            'falla-proteccion': '🔴 <strong>Significado Técnico:</strong> El elemento de corte operó o sufrió destrucción interna (fusibles quemados, polos soldados o térmico abierto). La falla está en la protección.',
+            'asimetria': '⚠️ <strong>Significado Técnico:</strong> Desequilibrio de tensión en la red trifásica. Puede indicar corte de fase en la distribuidora o neutro flotante, arriesgando la vida de los motores.',
+            'mando-caido': '📉 <strong>Significado Técnico:</strong> Tensión de mando insuficiente (ej. 18VDC en lugar de 24VDC), causando rebote o estados indefinidos en los contactores y relés.'
+        },
+        p5: {
+            'ok': '🟢 <strong>Significado Técnico:</strong> La serie de contactos de seguridad está cerrada y la tensión de mando llega limpiamente a la bobina del actuador.',
+            'interrumpido': '🛑 <strong>Significado Técnico:</strong> Uno de los contactos en serie (seta de emergencia, térmico, presostato, final de carrera) se encuentra abierto, bloqueando la habilitación.'
+        },
+        p6: {
+            'ninguno': 'ℹ️ <strong>Significado Técnico:</strong> Continúe con las mediciones punto a punto para aislar el componente defectuoso.',
+            'bobina-abierta': '❌ <strong>Significado Técnico:</strong> Devanado cortado internamente por sobretensión o fatiga. El contactor no acoplará aunque reciba tensión nominal.',
+            'bobina-corto': '🔥 <strong>Significado Técnico:</strong> Aislamiento de esmalte fundido (R = 0 Ω). Al energizar provocará el disparo instantáneo del fusible/térmica de mando.',
+            'contacto-abierto': '⚠️ <strong>Significado Técnico:</strong> Platinos quemados, con hollín o mecanismo trabado que impiden la conducción aunque el actuador se mueva.',
+            'termico-desajustado': '⚙️ <strong>Significado Técnico:</strong> Disparo en falso. El dial de regulación no coincide con la corriente nominal del motor o el bimetal perdió calibración.'
+        }
+    };
+
+    function actualizarExplicaciones() {
+        var v1 = document.getElementById('p1-tension-cero').value;
+        document.getElementById('exp-p1').innerHTML = explicaciones.p1[v1] || '';
+
+        var v3 = document.getElementById('p3-plano').value;
+        document.getElementById('exp-p3').innerHTML = explicaciones.p3[v3] || '';
+
+        var v4 = document.getElementById('p4-alimentacion').value;
+        document.getElementById('exp-p4').innerHTML = explicaciones.p4[v4] || '';
+
+        var v5 = document.getElementById('p5-mando').value;
+        document.getElementById('exp-p5').innerHTML = explicaciones.p5[v5] || '';
+
+        var v6 = document.getElementById('p6-componente').value;
+        document.getElementById('exp-p6').innerHTML = explicaciones.p6[v6] || '';
+    }
+
+    // CAMBIO DE PESTAÑAS
+    function cambiarPestana(idContenido, botonPresionado) {
+        var contenidos = document.getElementsByClassName('tab-content');
+        for (var i = 0; i < contenidos.length; i++) {
+            contenidos[i].classList.remove('active');
+        }
+
+        var botones = document.getElementsByClassName('tab-btn');
+        for (var j = 0; j < botones.length; j++) {
+            botones[j].classList.remove('active');
+        }
+
+        document.getElementById(idContenido).classList.add('active');
+        botonPresionado.classList.add('active');
+    }
+
+    function mostrarDetallePaso5() {
+        var val = document.getElementById('p5-mando').value;
+        document.getElementById('p5-detalle-container').style.display = (val === 'interrumpido') ? 'block' : 'none';
+    }
+
+    // DIAGNÓSTICO DE CAMPO
+    function generarDiagnostico() {
+        var tensionCero = document.getElementById('p1-tension-cero').value;
+        var loto = document.getElementById('p1-loto').checked;
+        var alimentacion = document.getElementById('p4-alimentacion').value;
+        var mandoState = document.getElementById('p5-mando').value;
+        var elementoInterrumpido = document.getElementById('p5-elemento').value;
+        var compState = document.getElementById('p6-componente').value;
+        
+        var checkboxes = document.querySelectorAll('.p2-visual:checked');
+        var visuales = [];
+        for (var i = 0; i < checkboxes.length; i++) {
+            visuales.push(checkboxes[i].value);
+        }
+
+        var alertaDiv = document.getElementById('alerta-seguridad-chk');
+        var listaDiag = document.getElementById('lista-diagnostico-chk');
+        var solucionP = document.getElementById('solucion-sugerida-chk');
+
+        listaDiag.innerHTML = "";
+        var causas = [];
+        var soluciones = [];
+
+        if (tensionCero === 'peligro') {
+            alertaDiv.className = "alert-box alert-danger";
+            alertaDiv.innerHTML = "🚨 ALERTA CRÍTICA: Tensión detectada en bornes de entrada. Posible retorno o alimentación secundaria. ¡Aplicar LOTO antes de proceder!";
+            causas.push("<strong>Riesgo Eléctrico:</strong> Presencia de tensión no identificada en el tablero.");
+        } else if (!loto) {
+            alertaDiv.className = "alert-box alert-warning";
+            alertaDiv.innerHTML = "⚠️ ADVERTENCIA: Candado LOTO no colocado. Riesgo de re-energización accidental.";
+        } else {
+            alertaDiv.className = "alert-box alert-success";
+            alertaDiv.innerHTML = "✅ Área Segura: Tensión Cero y LOTO verificados correctamente.";
+        }
+
+        if (visuales.indexOf('carbonizacion') !== -1) {
+            causas.push("<strong>Arco Eléctrico previo:</strong> Presencia de huellas de quema en bornes.");
+            soluciones.push("Limpiar hollín y sustituir tramos de conductor dañados.");
+        }
+        if (visuales.indexOf('flojos') !== -1) {
+            causas.push("<strong>Falso Contacto:</strong> Tornillos o bornes flojos generaron calentamiento.");
+            soluciones.push("Ajustar retorqueo general de bornes con torquímetro.");
+        }
+
+        if (alimentacion === 'falla-proteccion') {
+            causas.push("<strong>Protección Abierta/Defectuosa:</strong> La energía entra a la protección pero no sale.");
+            soluciones.push("Reemplazar fusibles o térmico dañado.");
+        } else if (alimentacion === 'asimetria') {
+            causas.push("<strong>Asimetría / Falta de Fase:</strong> Tensión incorrecta en una de las fases de la red trifásica.");
+            soluciones.push("Verificar suministro aguas arriba y estado del neutro.");
+        }
+
+        if (mandoState === 'interrumpido') {
+            var det = elementoInterrumpido ? "[" + elementoInterrumpido + "]" : "";
+            causas.push("<strong>Corte en Mando:</strong> La señal se detiene entre el último punto con tensión y el primero sin ella " + det + ".");
+            soluciones.push("Comprobar continuidad del contacto auxiliar sospechoso.");
+        }
+
+        if (compState === 'bobina-abierta') {
+            causas.push("<strong>Bobina Quemada:</strong> Bobina de contactor/relé interrumpida (R = ∞).");
+            soluciones.push("Reemplazar la bobina o el contactor.");
+        }
+
+        if (causas.length === 0) {
+            causas.push("No se hallaron fallas evidentes en potencia/mando. Inspeccionar autómatas (PLC) o sensores.");
+            soluciones.push("Realizar ciclo de prueba completo (Paso 7) y documentar.");
+        }
+
+        for (var j = 0; j < causas.length; j++) {
+            var li = document.createElement('li');
+            li.innerHTML = causas[j];
+            listaDiag.appendChild(li);
+        }
+
+        solucionP.innerHTML = soluciones.join("<br>• ") || "Ejecutar comprobación de rutina y entregar tablero.";
+        document.getElementById('resultado-checklist').style.display = 'block';
+        document.getElementById('resultado-checklist').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // CALCULADORA DE NEUTRO (MILLMAN)
+    function cargarEjemplo(pr, ps, pt) {
+        document.getElementById('pr-watts').value = pr;
+        document.getElementById('ps-watts').value = ps;
+        document.getElementById('pt-watts').value = pt;
+        calcularCorteNeutro();
+    }
+
+    function calcularCorteNeutro() {
+        var V0 = parseFloat(document.getElementById('calc-v0').value) || 220;
+        var PR = parseFloat(document.getElementById('pr-watts').value) || 10;
+        var PS = parseFloat(document.getElementById('ps-watts').value) || 10;
+        var PT = parseFloat(document.getElementById('pt-watts').value) || 10;
+
+        var YR = PR / (V0 * V0);
+        var YS = PS / (V0 * V0);
+        var YT = PT / (V0 * V0);
+        var Y_tot = YR + YS + YT;
+
+        if (Y_tot === 0) return;
+
+        var sqrt3_2 = Math.sqrt(3) / 2.0;
+
+        var Re_num = (V0 * YR) + (-0.5 * V0 * YS) + (-0.5 * V0 * YT);
+        var Im_num = (0) + (-sqrt3_2 * V0 * YS) + (sqrt3_2 * V0 * YT);
+
+        var Re_VNN = Re_num / Y_tot;
+        var Im_VNN = Im_num / Y_tot;
+        var mag_VNN = Math.sqrt(Re_VNN * Re_VNN + Im_VNN * Im_VNN);
+
+        var Re_VR_p = V0 - Re_VNN;
+        var Im_VR_p = 0 - Im_VNN;
+        var mag_VR_p = Math.sqrt(Re_VR_p * Re_VR_p + Im_VR_p * Im_VR_p);
+
+        var Re_VS_p = (-0.5 * V0) - Re_VNN;
+        var Im_VS_p = (-sqrt3_2 * V0) - Im_VNN;
+        var mag_VS_p = Math.sqrt(Re_VS_p * Re_VS_p + Im_VS_p * Im_VS_p);
+
+        var Re_VT_p = (-0.5 * V0) - Re_VNN;
+        var Im_VT_p = (sqrt3_2 * V0) - Im_VNN;
+        var mag_VT_p = Math.sqrt(Re_VT_p * Re_VT_p + Im_VT_p * Im_VT_p);
+
+        var RR = (V0 * V0) / PR;
+        var RS = (V0 * V0) / PS;
+        var RT = (V0 * V0) / PT;
+
+        var IR_p = mag_VR_p / RR;
+        var IS_p = mag_VS_p / RS;
+        var IT_p = mag_VT_p / RT;
+
+        document.getElementById('v-neutro-desplazamiento').innerText = mag_VNN.toFixed(1) + " V";
+
+        var alertaDiv = document.getElementById('alerta-neutro-res');
+        var maxV = Math.max(mag_VR_p, mag_VS_p, mag_VT_p);
+
+        if (maxV > V0 * 1.1) {
+            alertaDiv.className = "alert-box alert-danger";
+            alertaDiv.innerHTML = "🔥 RIESGO DE DESTRUCCIÓN: Al romperse el neutro, una o más fases alcanzan " + maxV.toFixed(1) + " V. Los equipos conectados en esa fase sufrirán sobretensión severa y se quemarán.";
+        } else {
+            alertaDiv.className = "alert-box alert-success";
+            alertaDiv.innerHTML = "🟢 Cargas equilibradas: Al estar el sistema balanceado, el desplazamiento del neutro es mínimo.";
+        }
+
+        var gridResults = document.getElementById('grid-resultados-fases');
+        gridResults.innerHTML = 
+            renderPhaseCard('Fase R (L1)', mag_VR_p, IR_p, PR, V0, '#e63946') +
+            renderPhaseCard('Fase S (L2)', mag_VS_p, IS_p, PS, V0, '#f4a261') +
+            renderPhaseCard('Fase T (L3)', mag_VT_p, IT_p, PT, V0, '#2a9d8f');
+
+        var minP = Math.min(PR, PS, PT);
+        document.getElementById('explicacion-tecnica').innerHTML = 
+            "Debido a la rotura del neutro, la fase con menor potencia nominal (" + minP + " W) posee la <strong>mayor impedancia</strong>, absorbiendo la mayor sobreelevación de tensión.<br><br>" +
+            "• <strong>Fases con Tensión > " + (V0 * 1.1).toFixed(0) + "V:</strong> Riesgo inminente de destrucción de placas electrónicas y aislaciones.<br>" +
+            "• <strong>Fases con Tensión < " + (V0 * 0.9).toFixed(0) + "V:</strong> Subtensión severa, los motores sufren recalentamiento o no arrancan.";
+
+        var resPanel = document.getElementById('resultado-calc');
+        resPanel.style.display = 'block';
+        resPanel.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function renderPhaseCard(nombre, volt, amp, potNom, V0, color) {
+        var statusBadge = "";
+        if (volt > V0 * 1.1) {
+            statusBadge = '<span class="status-badge bg-danger">🔥 SOBRETENSIÓN (' + volt.toFixed(1) + ' V)</span>';
+        } else if (volt < V0 * 0.9) {
+            statusBadge = '<span class="status-badge bg-warning">📉 SUBTENSIÓN (' + volt.toFixed(1) + ' V)</span>';
+        } else {
+            statusBadge = '<span class="status-badge bg-success">🟢 REGULAR (' + volt.toFixed(1) + ' V)</span>';
+        }
+
+        return '<div class="phase-box" style="border-top: 4px solid ' + color + ';">' +
+               '<h3 style="margin-top:0;">' + nombre + '</h3>' +
+               '<p><strong>Potencia Nominal:</strong> ' + potNom + ' W</p>' +
+               '<p><strong>Tensión Resultante:</strong> <span style="font-size:1.1rem; font-weight:bold;">' + volt.toFixed(1) + ' V</span></p>' +
+               '<p><strong>Corriente Resultante:</strong> ' + amp.toFixed(2) + ' A</p>' +
+               statusBadge +
+               '</div>';
+    }
+
+    // Inicializar explicaciones al cargar
+    window.onload = function() {
+        actualizarExplicaciones();
+    };
+</script>
+
+</body>
+</html>
