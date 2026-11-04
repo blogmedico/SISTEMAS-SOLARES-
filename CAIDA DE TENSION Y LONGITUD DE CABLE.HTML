@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Dimensionamiento de Cables Fotovoltaicos</title>
+    <style>
+        :root {
+            --primary: #1e3d59;
+            --accent: #17b890;
+            --warning: #f4a261;
+            --danger: #e63946;
+            --bg: #f4f6f9;
+            --card-bg: #ffffff;
+            --text: #2b2d42;
+            --border: #dcdfe6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            margin: 0 0 5px 0;
+            font-size: 1.5rem;
+        }
+
+        header p {
+            margin: 0;
+            opacity: 0.85;
+            font-size: 0.92rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-left: 5px solid var(--primary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        select, input[type="number"] {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+        .btn-calc {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background 0.2s;
+        }
+
+        .btn-calc:hover {
+            background-color: #139a78;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-preset {
+            background-color: #e2e8f0;
+            border: 1px solid #cbd5e1;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .btn-preset:hover {
+            background-color: #cbd5e1;
+        }
+
+        .results-panel {
+            background: #ffffff;
+            border: 2px solid var(--accent);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+        }
+
+        .res-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .res-box {
+            background-color: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 15px;
+        }
+
+        .res-box h4 {
+            margin: 0 0 5px 0;
+            color: #555;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .res-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .highlight-value {
+            color: var(--accent);
+            font-size: 1.4rem;
+        }
+
+        .info-box {
+            background-color: #eef6fc;
+            border-left: 4px solid var(--primary);
+            padding: 12px 15px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+
+        @media print {
+            .btn-calc, .preset-buttons { display: none; }
+            body { background: white; padding: 0; }
+            .container { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>⚡ Calculadora de Cables e Instalaciones Fotovoltaicas</h1>
+        <p>Cálculo de Sección Comercial y Caída de Tensión Admisible ($\Delta V$)</p>
+    </header>
+
+    <div class="card">
+        <h2>🛠️ Parámetros de la Instalación</h2>
+
+        <label>Presets Frecuentes de la Clase:</label>
+        <div class="preset-buttons">
+            <button class="btn-preset" onclick="cargarPreset(270, 5, 40, 1, 'paneles')">Ejemplo Apunte (270V / 5A / 40m / 1%)</button>
+            <button class="btn-preset" onclick="cargarPreset(12, 15, 8, 1, 'bateria')">Batería 12V (12V / 15A / 8m / 1%)</button>
+            <button class="btn-preset" onclick="cargarPreset(24, 20, 10, 3, 'bateria')">Batería 24V (24V / 20A / 10m / 3%)</button>
+            <button class="btn-preset" onclick="cargarPreset(220, 10, 25, 3, 'ca220')">Línea CA 220V (220V / 10A / 25m / 3%)</button>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Tramo de la Instalación:</label>
+                <select id="tramo" onchange="ajustarPorcentajeSegunTramo()">
+                    <option value="paneles">Paneles → Regulador/Inversor (CC) [0,5% - 1%]</option>
+                    <option value="bateria">Regulador → Batería FV (CC) [1% - 3%]</option>
+                    <option value="ca220">Instalación CA Monofásica (220V) [3%]</option>
+                    <option value="ca380">Instalación CA Trifásica (380V) [5%]</option>
+                    <option value="custom">Personalizado / Otro Tramo</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Tensión Nominal ($V$ en Volts):</label>
+                <input type="number" id="tension" value="270" min="1" step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label>Corriente de Trabajo ($I$ en Amperes):</label>
+                <input type="number" id="corriente" value="5" min="0.1" step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label>Longitud de Cable ($L$ en Metros - Ida):</label>
+                <input type="number" id="longitud" value="40" min="0.5" step="0.5">
+            </div>
+
+            <div class="form-group">
+                <label>Caída Admisible Máxima ($\Delta V$ %):</label>
+                <input type="number" id="porcentaje" value="1" min="0.1" max="10" step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label>Material del Conductor:</label>
+                <select id="material">
+                    <option value="0.0175" selected>Cobre (ρ = 0,0175 Ω·mm²/m)</option>
+                    <option value="0.028">Aluminio (ρ = 0,028 Ω·mm²/m)</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-calc" onclick="calcularSeccionCable()">📏 CALCULAR SECCIÓN Y CAÍDA DE TENSIÓN</button>
+    </div>
+
+    <div id="resultado-panel" class="results-panel" style="display:none;">
+        <h2>📊 Resultados del Dimensionamiento</h2>
+
+        <div class="res-grid">
+            <div class="res-box">
+                <h4>Caída Máxima Admisible ($\Delta V$)</h4>
+                <div class="res-value" id="res-deltav">-- V</div>
+            </div>
+
+            <div class="res-box">
+                <h4>Sección Mínima Calculada ($S$)</h4>
+                <div class="res-value" id="res-seccion-calc">-- mm²</div>
+            </div>
+
+            <div class="res-box" style="border-left: 4px solid var(--accent);">
+                <h4>Sección Comercial Sugerida</h4>
+                <div class="res-value highlight-value" id="res-seccion-comercial">-- mm²</div>
+            </div>
+
+            <div class="res-box">
+                <h4>Caída Real con Cable Comercial</h4>
+                <div class="res-value" id="res-deltav-real">-- V</div>
+            </div>
+
+            <div class="res-box">
+                <h4>Porcentaje de Caída Real</h4>
+                <div class="res-value" id="res-porcentaje-real">-- %</div>
+            </div>
+
+            <div class="res-box">
+                <h4>Pérdida de Potencia en Línea</h4>
+                <div class="res-value" id="res-perdida-w">-- W</div>
+            </div>
+        </div>
+
+        <div class="info-box" id="info-conclusion"></div>
+
+        <button class="btn-calc" style="background-color:#6c757d; margin-top:15px;" onclick="window.print()">🖨️ Imprimir / Guardar en PDF</button>
+    </div>
+</div>
+
+<script>
+    const seccionesComerciales = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120];
+
+    function ajustarPorcentajeSegunTramo() {
+        const tramo = document.getElementById('tramo').value;
+        const inputTension = document.getElementById('tension');
+        const inputPorcentaje = document.getElementById('porcentaje');
+
+        if (tramo === 'paneles') {
+            inputPorcentaje.value = 1;
+        } else if (tramo === 'bateria') {
+            inputPorcentaje.value = 2;
+        } else if (tramo === 'ca220') {
+            inputTension.value = 220;
+            inputPorcentaje.value = 3;
+        } else if (tramo === 'ca380') {
+            inputTension.value = 380;
+            inputPorcentaje.value = 5;
+        }
+    }
+
+    function cargarPreset(v, i, l, pct, tramoVal) {
+        document.getElementById('tramo').value = tramoVal;
+        document.getElementById('tension').value = v;
+        document.getElementById('corriente').value = i;
+        document.getElementById('longitud').value = l;
+        document.getElementById('porcentaje').value = pct;
+        calcularSeccionCable();
+    }
+
+    function calcularSeccionCable() {
+        const V = parseFloat(document.getElementById('tension').value);
+        const I = parseFloat(document.getElementById('corriente').value);
+        const L = parseFloat(document.getElementById('longitud').value);
+        const pctAdmisible = parseFloat(document.getElementById('porcentaje').value);
+        const rho = parseFloat(document.getElementById('material').value);
+
+        if (!V || !I || !L || !pctAdmisible) {
+            alert("Por favor complete todos los valores numéricos correctamente.");
+            return;
+        }
+
+        // 1. Caída de tensión admisible en Volts: ΔV = V * (% / 100)
+        const deltaV = V * (pctAdmisible / 100);
+
+        // 2. Sección teórica: S = (2 * L * I * rho) / ΔV
+        const S_calculada = (2 * L * I * rho) / deltaV;
+
+        // 3. Selección de sección comercial estandarizada
+        let S_comercial = seccionesComerciales.find(s => s >= S_calculada);
+        if (!S_comercial) {
+            S_comercial = Math.ceil(S_calculada);
+        }
+
+        // 4. Caída real y porcentaje real con el cable comercial
+        const deltaV_real = (2 * L * I * rho) / S_comercial;
+        const pct_real = (deltaV_real / V) * 100;
+
+        // 5. Pérdida de potencia en el conductor (P = I^2 * R, donde R = 2 * L * rho / S_comercial)
+        const R_cable = (2 * L * rho) / S_comercial;
+        const P_perdida = (I * I) * R_cable;
+
+        // Mostrar resultados en pantalla
+        document.getElementById('res-deltav').innerText = deltaV.toFixed(2) + " V";
+        document.getElementById('res-seccion-calc').innerText = S_calculada.toFixed(2) + " mm²";
+        document.getElementById('res-seccion-comercial').innerText = S_comercial + " mm²";
+        document.getElementById('res-deltav-real').innerText = deltaV_real.toFixed(2) + " V";
+        document.getElementById('res-porcentaje-real').innerText = pct_real.toFixed(2) + " %";
+        document.getElementById('res-perdida-w').innerText = P_perdida.toFixed(1) + " W";
+
+        const V_final = V - deltaV_real;
+        document.getElementById('info-conclusion').innerHTML = 
+            `💡 <strong>Conclusión Técnica:</strong> Para una línea de ${L} metros con ${I} A a ${V} V, se recomienda instalar un cable de <strong>${S_comercial} mm²</strong>.<br>` +
+            `• La tensión recibida al final del tramo será de <strong>${V_final.toFixed(2)} V</strong> (caída real de ${deltaV_real.toFixed(2)} V / ${pct_real.toFixed(2)}%).<br>` +
+            `• Se disiparán <strong>${P_perdida.toFixed(1)} Watts</strong> en forma de calor a lo largo de los ${L * 2} metros de recorrido total (ida y vuelta).`;
+
+        const panel = document.getElementById('resultado-panel');
+        panel.style.display = 'block';
+        panel.scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
